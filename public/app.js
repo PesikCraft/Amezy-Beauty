@@ -22,28 +22,47 @@ async function apiRequest(endpoint, options = {}) {
         'Content-Type': 'application/json',
         ...options.headers
     };
-    
+
     if (state.token) {
         headers['Authorization'] = `Bearer ${state.token}`;
     }
-    
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-            ...options,
-            headers
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Произошла ошибка');
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let data = null;
+
+    if (contentType.includes('application/json')) {
+        data = await response.json();
+    } else {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+
+        if (response.status === 401) {
+            localStorage.removeItem('amezy_token');
+            state.token = null;
+            state.user = null;
+            updateAuthUI();
+            throw new Error('Сессия устарела, войдите снова');
         }
-        
-        return data;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
+
+        throw new Error('Сервер вернул неверный ответ');
     }
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('amezy_token');
+            state.token = null;
+            state.user = null;
+            updateAuthUI();
+        }
+        throw new Error(data?.error || 'Ошибка API');
+    }
+
+    return data;
 }
 
 // ==================== SSE (Real-time) ====================
