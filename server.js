@@ -156,9 +156,13 @@ function authMiddleware(req, res, next) {
     const db = readDB();
     const session = db.sessions.find(s => s.token === token);
     
-    if (!session) {
-        return res.status(401).json({ error: 'Недействительный токен' });
-    }
+    if (res.status === 401) {
+    localStorage.removeItem('amezy_token');
+    state.token = null;
+    updateAuthUI();
+    showToast('Сессия устарела, войдите снова', 'error');
+    return;
+}
     
     const user = db.users.find(u => u.id === session.userId);
     
