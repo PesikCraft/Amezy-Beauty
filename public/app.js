@@ -794,7 +794,12 @@ function renderOrders(orders) {
 
 async function showOrderDetail(orderId) {
     try {
-        const order = await apiRequest(`/orders/${orderId}`);
+        // Админ и superadmin открывают заказ через admin API
+        const endpoint = isAdmin()
+            ? `/admin/orders/${orderId}`
+            : `/orders/${orderId}`;
+
+        const order = await apiRequest(endpoint);
         
         const content = document.getElementById('orderDetailContent');
         content.innerHTML = `
@@ -804,7 +809,9 @@ async function showOrderDetail(orderId) {
                         <h2>${order.orderNumber}</h2>
                         <p>${formatDate(order.createdAt)}</p>
                     </div>
-                    <span class="status-badge status-${order.status}">${getStatusText(order.status)}</span>
+                    <span class="status-badge status-${order.status}">
+                        ${getStatusText(order.status)}
+                    </span>
                 </div>
                 
                 <div class="order-detail-section">
@@ -827,14 +834,20 @@ async function showOrderDetail(orderId) {
                     <h4>Доставка</h4>
                     ${order.mapCoordinates ? `
                         <div class="order-detail-map">
-                           <iframe
-  src="https://yandex.ru/map-widget/v1/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16&pt=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]},pm2rdm">
-</iframe>
+                            <iframe
+                              src="https://yandex.ru/map-widget/v1/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16&pt=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]},pm2rdm">
+                            </iframe>
                         </div>
                     ` : ''}
                     <div class="order-detail-address">
                         <strong>Адрес:</strong> ${order.address}
-                        ${order.mapCoordinates ? `<br><a href="https://yandex.ru/maps/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16&pt=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]},pm2rdm" target="_blank">Открыть в Яндекс.Картах</a>` : ''}
+                        ${order.mapCoordinates ? `
+                            <br>
+                            <a href="https://yandex.ru/maps/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16&pt=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]},pm2rdm"
+                               target="_blank">
+                               Открыть в Яндекс.Картах
+                            </a>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -858,7 +871,7 @@ async function showOrderDetail(orderId) {
         
         document.getElementById('orderDetailOverlay').classList.remove('hidden');
     } catch (error) {
-        showToast('Ошибка загрузки заказа', 'error');
+        showToast(error.message || 'Ошибка загрузки заказа', 'error');
     }
 }
 
