@@ -1,0 +1,160 @@
+{
+  "users": [
+    {
+      "id": "4605be4b-b023-44da-b7f1-8e0ac3a24a68",
+      "name": "Super Admin",
+      "email": "amezybeauty@gmail.com",
+      "password": "amezybeautyglav2025",
+      "role": "superadmin",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "8e64cccd-9123-497a-b9c7-d4a5ae5b760c",
+      "name": "Areg",
+      "email": "areghovhannisyan@gmail.com",
+      "password": "amezybeauty2025",
+      "role": "admin",
+      "createdAt": "2025-12-28T12:18:55.402Z"
+    },
+    {
+      "id": "f10438b9-1ad3-4bef-8c74-e87ff27bfc68",
+      "name": "Vahan",
+      "email": "vahansemirjyan@gmail.com",
+      "password": "amezybeauty2025",
+      "role": "admin",
+      "createdAt": "2025-12-28T22:34:04.605Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-face",
+      "name": "Уход за лицом",
+      "slug": "face",
+      "icon": "✨"
+    },
+    {
+      "id": "cat-body",
+      "name": "Уход за телом",
+      "slug": "body",
+      "icon": "🧴"
+    },
+    {
+      "id": "cat-feet",
+      "name": "Уход за ногами",
+      "slug": "feet",
+      "icon": "🦶"
+    }
+  ],
+  "products": [
+    {
+      "id": "040b6fbd-6790-4f72-b23c-4a64162c7aac",
+      "name": "xuy ego",
+      "price": 5000,
+      "categoryId": "cat-feet",
+      "description": "Pizda shreka",
+      "image": "/uploads/6ac601f9-ad67-408a-9804-82a3140200e6.jpeg",
+      "createdAt": "2025-12-28T17:41:00.434Z"
+    }
+  ],
+  "orders": [],
+  "ordersHistory": [],
+  "sessions": [
+    {
+      "token": "d4aa0514-b3bb-4006-8feb-7d33b94988ea",
+      "userId": "f23abf81-6ac2-49dc-a809-a7077b9d1dfc",
+      "createdAt": "2025-12-28T12:09:00.740Z"
+    },
+    {
+      "token": "d027ee43-6364-47ed-8227-1b62bd2f36ab",
+      "userId": "admin-001",
+      "createdAt": "2025-12-28T12:20:46.401Z"
+    },
+    {
+      "token": "1c36dbeb-532d-4b78-9631-7edd1ae6e9d1",
+      "userId": "admin-001",
+      "createdAt": "2025-12-28T13:27:21.145Z"
+    },
+    {
+      "token": "3cad4739-eb5f-41e2-a419-2b033879f873",
+      "userId": "admin-001",
+      "createdAt": "2025-12-28T13:28:32.599Z"
+    },
+    {
+      "token": "1cedd59f-2626-4dc3-be10-4518b7345d28",
+      "userId": "41c4d6b6-7b07-45ed-9485-59b36d01b784",
+      "createdAt": "2025-12-28T19:44:20.667Z"
+    },
+    {
+      "token": "b98a4e85-fa34-4869-bdc7-da5cc47b9016",
+      "userId": "2a272f5f-318e-4eea-80ce-8cbc80923066",
+      "createdAt": "2025-12-28T20:04:17.172Z"
+    },
+    {
+      "token": "e56e3798-35bb-4d9c-aff2-b865d53b55e7",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T21:39:57.880Z"
+    },
+    {
+      "token": "0729ef81-8708-48ae-b199-ee455bf5a249",
+      "userId": "admin-001",
+      "createdAt": "2025-12-28T21:54:15.459Z"
+    },
+    {
+      "token": "04408195-2972-4023-aff5-3b70fbb22e86",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T22:11:08.931Z"
+    },
+    {
+      "token": "302e4aa3-4fa4-469e-acf8-e2ae8a7402a0",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T22:13:00.232Z"
+    },
+    {
+      "token": "476cf73f-b051-4396-b4b1-f5688b47ac9a",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T22:13:23.848Z"
+    },
+    {
+      "token": "bb1fa4ef-8879-46f4-a077-25d37d1d0797",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T22:18:08.518Z"
+    },
+    {
+      "token": "90fa9832-b60f-43f7-8e2e-a87e7072d4b7",
+      "userId": "878cfc28-618c-441e-9f0c-43f840b37391",
+      "createdAt": "2025-12-28T22:23:11.570Z"
+    },
+    {
+      "token": "78f5e02f-be5b-454b-8641-9b6c833ef1c2",
+      "userId": "admin-001",
+      "createdAt": "2025-12-28T22:51:11.023Z"
+    },
+    {
+      "token": "bbada107-613a-4811-8c5f-3f2632984754",
+      "userId": "4605be4b-b023-44da-b7f1-8e0ac3a24a68",
+      "createdAt": "2025-12-28T22:53:43.126Z"
+    }
+  ],
+  "settings": {
+    "adminCode": "amezybeauty2025",
+    "paymentCard": {
+      "number": "4355 0539 2618 2967",
+      "holder": "SERYOZHA SIMONYAN",
+      "instruction": "Переведите точную сумму заказа на карту"
+    },
+    "currencies": {
+      "AMD": {
+        "symbol": "֏",
+        "rate": 1
+      },
+      "RUB": {
+        "symbol": "₽",
+        "rate": 0.23
+      },
+      "USD": {
+        "symbol": "$",
+        "rate": 0.0026
+      }
+    }
+  }
+}
