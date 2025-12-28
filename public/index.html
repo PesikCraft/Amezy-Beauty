@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amezy Beauty - Интернет-магазин косметики</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <a href="#" class="logo" onclick="showPage('home'); return false;">
+                <img src="Amezy.jpg" alt="Amezy Beauty" class="logo-image">
+            </a>
+            
+            <nav class="nav">
+                <a href="#" class="nav-link active" data-page="home" onclick="showPage('home'); return false;">Главная</a>
+                <a href="#" class="nav-link" data-page="catalog" onclick="showPage('catalog'); return false;">Каталог</a>
+                <a href="#" class="nav-link" data-page="cart" onclick="showPage('cart'); return false;">
+                    Корзина <span class="cart-count" id="cartCount">0</span>
+                </a>
+                <a href="#" class="nav-link" data-page="orders" onclick="showPage('orders'); return false;">Мои заказы</a>
+            </nav>
+            
+            <div class="header-right">
+                <div class="currency-selector">
+                    <select id="currencySelect" onchange="changeCurrency(this.value)">
+                        <option value="AMD">AMD ֏</option>
+                        <option value="RUB">RUB ₽</option>
+                        <option value="USD">USD $</option>
+                    </select>
+                </div>
+                
+                <div class="header-actions" id="authButtons">
+                    <button class="btn btn-outline btn-sm" onclick="showModal('login')">Войти</button>
+                    <button class="btn btn-primary btn-sm" onclick="showModal('register')">Регистрация</button>
+                </div>
+                
+                <div class="user-menu hidden" id="userMenu">
+                    <span class="user-name" id="userName"></span>
+                    <button class="btn btn-primary btn-sm" id="adminBtn" style="display:none" onclick="showPage('admin')">Админ</button>
+                    <button class="btn btn-text btn-sm" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Home Page -->
+        <div class="page active" id="homePage">
+            <section class="hero">
+                <div class="container hero-content">
+                    <img src="Amezy-removebg-preview.png" alt="Amezy Beauty" class="hero-logo">
+                    <p>Премиальная косметика и средства по уходу за кожей</p>
+                    <button class="btn btn-primary btn-lg" onclick="showPage('catalog')">
+                        Смотреть каталог
+                    </button>
+                </div>
+            </section>
+            
+            <div class="container">
+                <section class="categories-section">
+                    <h2 class="section-title">Категории</h2>
+                    <div class="categories-grid" id="categoriesGrid"></div>
+                </section>
+                
+                <section class="featured-section">
+                    <h2 class="section-title">Популярные товары</h2>
+                    <div class="products-grid" id="featuredProducts"></div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Catalog Page -->
+        <div class="page" id="catalogPage">
+            <div class="container">
+                <h1 class="page-title">Каталог</h1>
+                
+                <div class="catalog-filters">
+                    <button class="filter-btn active" data-category="all" onclick="filterProducts('all')">Все товары</button>
+                    <div id="categoryFilters"></div>
+                </div>
+                
+                <div class="products-grid" id="catalogProducts"></div>
+            </div>
+        </div>
+
+        <!-- Cart Page -->
+        <div class="page" id="cartPage">
+            <div class="container">
+                <h1 class="page-title">Корзина</h1>
+                
+                <div class="empty-state" id="cartEmpty">
+                    <span class="empty-icon">🛒</span>
+                    <p>Ваша корзина пуста</p>
+                    <button class="btn btn-primary" onclick="showPage('catalog')">Перейти в каталог</button>
+                </div>
+                
+                <div class="cart-content hidden" id="cartContent">
+                    <div class="cart-items" id="cartItems"></div>
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Итого:</span>
+                            <span class="summary-total" id="cartTotal">0 ֏</span>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="showCheckout()">Оформить заказ</button>
+                    </div>
+                </div>
+                
+                <!-- Checkout Form -->
+                <div class="checkout-form hidden" id="checkoutForm">
+                    <h2>Оформление заказа</h2>
+                    
+                    <div class="form-group">
+                        <label>Способ оплаты</label>
+                        <div class="payment-options">
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="cash" checked onchange="togglePaymentInfo()">
+                                <span class="payment-label">💵 Наличными при получении</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="card" onchange="togglePaymentInfo()">
+                                <span class="payment-label">💳 Онлайн-оплата картой</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Payment Info -->
+                    <div class="card-payment-info hidden" id="cardPaymentInfo">
+                        <div class="payment-card-details">
+                            <h4>Реквизиты для оплаты</h4>
+                            <div class="card-number-box large">
+                                <span id="paymentCardNumber">0000 0000 0000 0000</span>
+                                <button class="btn btn-sm" onclick="copyCardNumber()">📋 Копировать</button>
+                            </div>
+                            <p class="card-holder" id="paymentCardHolder">Имя держателя</p>
+                            <p class="payment-instruction" id="paymentInstruction">Переведите точную сумму на карту</p>
+                            <p class="payment-amount">Сумма: <strong id="paymentAmount">0 ֏</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Адрес доставки</label>
+                        <div class="address-input-group">
+                            <input type="text" class="form-input" id="addressSearch" placeholder="Поиск адреса..." oninput="searchAddress(this.value)">
+                            <div class="address-suggestions hidden" id="addressSuggestions"></div>
+                        </div>
+                        <textarea class="form-input" id="deliveryAddress" rows="2" placeholder="Полный адрес доставки, и номер телефона"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Точка на карте</label>
+                        <div class="map-container">
+                            <div class="map-frame">
+                                <iframe
+                                    id="mapFrame"
+                                    src="https://yandex.ru/map-widget/v1/?ll=44.5152,40.1872&z=15&pt=44.5152,40.1872,pm2rdm"
+                                    allowfullscreen
+                                    loading="lazy">
+                                </iframe>
+                            </div>
+                            <div class="map-controls">
+                                <input type="text" class="form-input" id="coordsInput" placeholder="Координаты (lat,lon)" onchange="updateMapFromCoords(this.value)">
+                                <a href="https://yandex.ru/maps" target="_blank" class="map-link" id="mapLink">Открыть карту</a>
+                            </div>
+                            <input type="hidden" id="mapCoordinates">
+                            <input type="hidden" id="mapAddress">
+                        </div>
+                    </div>
+                    
+                    <div class="checkout-actions">
+                        <button class="btn btn-outline" onclick="hideCheckout()">Назад</button>
+                        <button class="btn btn-primary" id="checkoutBtn" onclick="placeOrder()">Подтвердить заказ</button>
+                    </div>
+                </div>
+                
+                <!-- Payment Confirmation -->
+                <div class="payment-confirmation hidden" id="paymentConfirmation">
+                    <div class="confirmation-card">
+                        <h2>Подтверждение оплаты</h2>
+                        
+                        <div class="order-summary-mini">
+                            <p><strong>Заказ:</strong> <span id="confirmOrderNumber"></span></p>
+                            <p><strong>Сумма:</strong> <span id="confirmOrderAmount"></span></p>
+                        </div>
+                        
+                        <div class="card-payment-info" style="margin:0;">
+                            <div class="payment-card-details">
+                                <h4>Переведите на карту:</h4>
+                                <div class="card-number-box large">
+                                    <span id="confirmCardNumber">0000 0000 0000 0000</span>
+                                    <button class="btn btn-sm" onclick="copyCardNumber()">📋</button>
+                                </div>
+                                <p class="card-holder" id="confirmCardHolder">Имя держателя</p>
+                            </div>
+                        </div>
+                        
+                        <p class="confirmation-note">После перевода нажмите кнопку "Я оплатил"</p>
+                        
+                        <div class="checkout-actions">
+                            <button class="btn btn-outline" onclick="cancelPayment()">Отмена</button>
+                            <button class="btn btn-success btn-lg" onclick="confirmPayment()">✓ Я оплатил</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div class="page" id="ordersPage">
+            <div class="container">
+                <h1 class="page-title">Мои заказы</h1>
+                
+                <div class="empty-state" id="ordersEmpty">
+                    <span class="empty-icon">📦</span>
+                    <p>У вас пока нет заказов</p>
+                    <button class="btn btn-primary" onclick="showPage('catalog')">Перейти в каталог</button>
+                </div>
+                
+                <div class="orders-list" id="ordersList"></div>
+            </div>
+        </div>
+
+        <!-- Admin Page -->
+        <div class="page" id="adminPage">
+            <div class="container">
+                <h1 class="page-title">Панель администратора</h1>
+                
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="showAdminTab('stats')">📊 Статистика</button>
+                    <button class="admin-tab" onclick="showAdminTab('orders')">📋 Заказы</button>
+                    <button class="admin-tab" onclick="showAdminTab('products')">🛍 Товары</button>
+                    <button class="admin-tab" onclick="showAdminTab('categories')">📁 Категории</button>
+                    <button class="admin-tab" onclick="showAdminTab('users')">👥 Пользователи</button>
+                    <button class="admin-tab" onclick="showAdminTab('history')">📜 История</button>
+                </div>
+                
+                <!-- Stats Tab -->
+                <div class="admin-content active" id="adminStats">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-icon">📅</span>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statToday">0 ֏</span>
+                                <span class="stat-label">Сегодня</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">📆</span>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statMonth">0 ֏</span>
+                                <span class="stat-label">За месяц</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">💰</span>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statTotal">0 ֏</span>
+                                <span class="stat-label">Всего</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">📦</span>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statOrders">0</span>
+                                <span class="stat-label">Заказов</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin:20px 0; text-align:right;">
+                        <button
+                            id="resetStatsBtn"
+                            class="btn btn-danger"
+                            style="display:none"
+                            onclick="resetStats()"
+                        >
+                            🗑 Очистить статистику
+                        </button>
+                    </div>
+                    <h3 class="section-title">По статусам</h3>
+                    <div class="stats-details" id="statsDetails"></div>
+                </div>
+                
+                <!-- Orders Tab -->
+                <div class="admin-content" id="adminOrders">
+                    <div class="admin-toolbar">
+                        <div class="status-filters">
+                            <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">Все</button>
+                            <button class="filter-btn" data-status="pending" onclick="filterOrders('pending')">Ожидают</button>
+                            <button class="filter-btn" data-status="paid" onclick="filterOrders('paid')">Оплачены</button>
+                            <button class="filter-btn" data-status="processing" onclick="filterOrders('processing')">В обработке</button>
+                            <button class="filter-btn" data-status="shipping" onclick="filterOrders('shipping')">В пути</button>
+                            <button class="filter-btn" data-status="done" onclick="filterOrders('done')">Выполнены</button>
+                        </div>
+                    </div>
+                    <div class="admin-orders-list" id="adminOrdersList"></div>
+                </div>
+                
+                <!-- Products Tab -->
+                <div class="admin-content" id="adminProducts">
+                    <button class="btn btn-primary" onclick="showModal('addProduct')">+ Добавить товар</button>
+                    <div class="admin-products-list" id="adminProductsList"></div>
+                </div>
+                
+                <!-- Categories Tab -->
+                <div class="admin-content" id="adminCategories">
+                    <button class="btn btn-primary" onclick="showModal('addCategory')">+ Добавить категорию</button>
+                    <div class="admin-categories-list" id="adminCategoriesList"></div>
+                </div>
+                
+                <!-- Users Tab -->
+                <div class="admin-content" id="adminUsers">
+                    <div class="admin-toolbar">
+                        <input type="text" class="form-input" placeholder="Поиск пользователей..." oninput="searchUsers(this.value)">
+                    </div>
+                    <div class="admin-users-list" id="adminUsersList"></div>
+                </div>
+                
+                <!-- History Tab -->
+                <div class="admin-content" id="adminHistory">
+                    <p style="color:var(--text-muted);margin-bottom:20px;">Удалённые заказы (статистика сохранена)</p>
+                    <div class="admin-orders-list" id="adminHistoryList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <img src="Amezy.jpg" alt="Amezy Beauty" class="logo-image">
+            </div>
+            <p class="footer-text">© 2025 Amezy Beauty. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target === this) closeModal()">
+        <!-- Login Modal -->
+        <div class="modal hidden" id="loginModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Вход</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-input" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-input" id="loginPassword" required>
+                </div>
+                <p class="form-error hidden" id="loginError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Войти</button>
+            </form>
+            <p class="modal-footer-text">
+                Нет аккаунта? <a href="#" onclick="closeModal(); showModal('register'); return false;">Зарегистрироваться</a>
+            </p>
+        </div>
+
+        <!-- Register Modal -->
+        <div class="modal hidden" id="registerModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Регистрация</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input type="text" class="form-input" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-input" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-input" id="registerPassword" required minlength="6">
+                </div>
+                <p class="form-error hidden" id="registerError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+            </form>
+            <p class="modal-footer-text">
+                Уже есть аккаунт? <a href="#" onclick="closeModal(); showModal('login'); return false;">Войти</a>
+            </p>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div class="modal hidden" id="addProductModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Добавить товар</h2>
+            <form onsubmit="handleAddProduct(event)">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" class="form-input" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label>Цена (AMD)</label>
+                    <input type="number" class="form-input" id="productPrice" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Категория</label>
+                    <select class="form-input" id="productCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea class="form-input" id="productDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Изображение</label>
+                    <div class="image-upload">
+                        <input type="file" id="productImageFile" accept="image/*" onchange="previewProductImage(this)">
+                        <div class="image-preview" id="productImagePreview"></div>
+                    </div>
+                </div>
+                <p class="form-error hidden" id="productError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Добавить</button>
+            </form>
+        </div>
+
+        <!-- Add Category Modal -->
+        <div class="modal hidden" id="addCategoryModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Добавить категорию</h2>
+            <form onsubmit="handleAddCategory(event)">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" class="form-input" id="categoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Иконка (emoji)</label>
+                    <input type="text" class="form-input" id="categoryIcon" placeholder="🌸">
+                </div>
+                <p class="form-error hidden" id="categoryError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Добавить</button>
+            </form>
+        </div>
+
+        <!-- Edit Category Modal -->
+        <div class="modal hidden" id="editCategoryModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Редактировать категорию</h2>
+            <form onsubmit="handleEditCategory(event)">
+                <input type="hidden" id="editCategoryId">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" class="form-input" id="editCategoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Иконка (emoji)</label>
+                    <input type="text" class="form-input" id="editCategoryIcon">
+                </div>
+                <p class="form-error hidden" id="editCategoryError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Сохранить</button>
+            </form>
+        </div>
+
+        <!-- Make Admin Modal -->
+        <div class="modal hidden" id="makeAdminModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Назначить администратором</h2>
+            <form onsubmit="handleMakeAdmin(event)">
+                <input type="hidden" id="makeAdminUserId">
+                <p style="margin-bottom:20px;">Пользователь: <strong id="makeAdminUserName"></strong></p>
+                <div class="form-group">
+                    <label>Код администратора</label>
+                    <input type="password" class="form-input" id="adminCode" required placeholder="Введите секретный код">
+                </div>
+                <p class="form-error hidden" id="makeAdminError"></p>
+                <button type="submit" class="btn btn-primary btn-block">Подтвердить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Detail Overlay -->
+    <div class="modal-overlay hidden" id="orderDetailOverlay" onclick="if(event.target === this) closeOrderDetail()">
+        <div class="modal modal-lg" id="orderDetailContent"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
