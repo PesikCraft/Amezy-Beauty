@@ -290,14 +290,10 @@ app.post('/api/auth/register', async (req, res) => {
         role: 'user'
     });
 
+    // Не возвращаем access_token, не логиним пользователя!
     res.json({
         ok: true,
-        user: {
-            id: data.user.id,
-            email: data.user.email,
-            name,
-            role: 'user'
-        }
+        needsEmailVerification: true
     });
 });
 
