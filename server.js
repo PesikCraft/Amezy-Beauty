@@ -1,3 +1,20 @@
+require('dotenv').config();
+
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+// Feature flag for Supabase-backed products
+const USE_SUPABASE_PRODUCTS = true;
+
+console.log('[ENV]', {
+  SUPABASE_URL: process.env.SUPABASE_URL ? 'OK' : 'MISSING',
+  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'OK' : 'MISSING'
+});
+console.log('SUPABASE_URL VALUE =', process.env.SUPABASE_URL);
 const { initTelegramBot, sendOrderToTelegram } = require('./telegram');
 const express = require('express');
 const fs = require('fs');
@@ -28,6 +45,24 @@ app.post('/api/admin/reset-stats', authMiddleware, superAdminMiddleware, (req, r
     writeDB(db);
 
     res.json({ success: true });
+});
+
+app.get('/api/test-supabase', async (req, res) => {
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .limit(5);
+
+    if (error) {
+        console.error('Supabase error:', error);
+        return res.status(500).json({ ok: false, error });
+    }
+
+    res.json({
+        ok: true,
+        count: data.length,
+        data
+    });
 });
 
 // SSE clients
@@ -391,41 +426,59 @@ app.delete('/api/categories/:id', authMiddleware, adminMiddleware, (req, res) =>
 });
 
 // ==================== PRODUCTS ====================
-app.get('/api/products', (req, res) => {
+app.get('/api/products', async (req, res) => {
     const { categoryId } = req.query;
-    const db = readDB();
-    
-    let products = db.products;
-    
-    if (categoryId && categoryId !== 'all') {
-        products = products.filter(p => p.categoryId === categoryId);
+
+    if (!USE_SUPABASE_PRODUCTS) {
+        const db = readDB();
+        let products = db.products;
+        if (categoryId && categoryId !== 'all') {
+            products = products.filter(p => p.categoryId === categoryId);
+        }
+        return res.json(products);
     }
-    
-    res.json(products);
+
+    let query = supabase.from('products').select('*');
+
+    if (categoryId && categoryId !== 'all') {
+        query = query.eq('category', categoryId);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Supabase products error:', error);
+        return res.status(500).json({ error: 'Failed to load products' });
+    }
+
+    res.json(data);
 });
 
-app.post('/api/products', authMiddleware, adminMiddleware, (req, res) => {
+app.post('/api/products', authMiddleware, adminMiddleware, async (req, res) => {
     const { name, price, categoryId, description } = req.body;
-    
+
     if (!name || !price || !categoryId) {
         return res.status(400).json({ error: 'Заполните обязательные поля' });
     }
-    
-    const db = readDB();
-    
+
     const product = {
         id: uuidv4(),
         name,
+        category: categoryId,
         price: Number(price),
-        categoryId,
-        description: description || '',
-        image: null,
-        createdAt: new Date().toISOString()
+        sizes: [],
+        colors: [],
+        svg: null,
+        created_at: new Date().toISOString()
     };
-    
-    db.products.push(product);
-    writeDB(db);
-    
+
+    const { error } = await supabase.from('products').insert([product]);
+
+    if (error) {
+        console.error('Supabase insert error:', error);
+        return res.status(500).json({ error: 'Не удалось сохранить товар' });
+    }
+
     res.json(product);
 });
 
@@ -468,25 +521,28 @@ const upload = multer({
     }
 });
 
-app.post('/api/products/:id/image', authMiddleware, adminMiddleware, upload.single('image'), (req, res) => {
+app.post('/api/products/:id/image', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
     const { id } = req.params;
-    const db = readDB();
-
-    const product = db.products.find(p => p.id === id);
-    if (!product) {
-        return res.status(404).json({ error: 'Товар не найден' });
-    }
 
     if (!req.file) {
         return res.status(400).json({ error: 'Файл не загружен' });
     }
 
-    product.image = `/uploads/${req.file.filename}`;
-    writeDB(db);
+    const imagePath = `/uploads/${req.file.filename}`;
+
+    const { error } = await supabase
+        .from('products')
+        .update({ image: imagePath })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Supabase image update error:', error);
+        return res.status(500).json({ error: 'Не удалось сохранить изображение' });
+    }
 
     res.json({
         success: true,
-        image: product.image
+        image: imagePath
     });
 });
 
@@ -884,4 +940,3 @@ app.listen(PORT, () => {
         chatId: '-1003567859536'
     });
 });
-
