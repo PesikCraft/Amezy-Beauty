@@ -24,17 +24,10 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'db.json');
-const UPLOADS_PATH = path.join(__dirname, 'public', 'uploads');
-
-// Создаём папку для загрузок
-if (!fs.existsSync(UPLOADS_PATH)) {
-    fs.mkdirSync(UPLOADS_PATH, { recursive: true });
-}
 
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(UPLOADS_PATH));
 
 app.post('/api/admin/reset-stats', authMiddleware, superAdminMiddleware, (req, res) => {
     const db = readDB();
@@ -498,29 +491,34 @@ app.delete('/api/products/:id', authMiddleware, adminMiddleware, (req, res) => {
 });
 
 
-// Multipart image upload
+// === Multer memory storage for Supabase upload ===
 const multer = require('multer');
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, UPLOADS_PATH);
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${uuidv4()}${ext}`);
-    }
-});
 const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Только изображения'));
-        }
-    }
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
+// === Supabase Storage Image Upload Helper ===
+async function uploadImageToSupabase(fileBuffer, fileName, mimeType) {
+    const filePath = `products/${Date.now()}_${fileName}`;
+
+    const { error } = await supabase.storage
+        .from('products')
+        .upload(filePath, fileBuffer, {
+            contentType: mimeType,
+            upsert: true
+        });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+    return data.publicUrl;
+}
+
+// === Supabase Storage image upload route ===
 app.post('/api/products/:id/image', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
     const { id } = req.params;
 
@@ -528,22 +526,31 @@ app.post('/api/products/:id/image', authMiddleware, adminMiddleware, upload.sing
         return res.status(400).json({ error: 'Файл не загружен' });
     }
 
-    const imagePath = `/uploads/${req.file.filename}`;
+    try {
+        const imageUrl = await uploadImageToSupabase(
+            req.file.buffer,
+            req.file.originalname,
+            req.file.mimetype
+        );
 
-    const { error } = await supabase
-        .from('products')
-        .update({ image: imagePath })
-        .eq('id', id);
+        const { error } = await supabase
+            .from('products')
+            .update({ image: imageUrl })
+            .eq('id', id);
 
-    if (error) {
-        console.error('Supabase image update error:', error);
-        return res.status(500).json({ error: 'Не удалось сохранить изображение' });
+        if (error) {
+            console.error('Supabase DB update error:', error);
+            return res.status(500).json({ error: 'Не удалось сохранить ссылку изображения' });
+        }
+
+        res.json({
+            success: true,
+            image: imageUrl
+        });
+    } catch (e) {
+        console.error('Supabase Storage upload error:', e);
+        res.status(500).json({ error: 'Ошибка загрузки изображения' });
     }
-
-    res.json({
-        success: true,
-        image: imagePath
-    });
 });
 
 // ==================== ORDERS ====================
