@@ -175,7 +175,7 @@ function initDB() {
     return db;
 }
 
-// ==================== AUTH MIDDLEWARE (SUPABASE AUTH) ====================
+// ==================== AUTH MIDDLEWARE (SUPABASE AUTH + PROFILES) ====================
 async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
@@ -186,15 +186,27 @@ async function authMiddleware(req, res, next) {
     const token = authHeader.replace('Bearer ', '');
 
     const { data, error } = await supabase.auth.getUser(token);
-
     if (error || !data.user) {
         return res.status(401).json({ error: 'Неверный или истёкший токен' });
     }
 
+    const user = data.user;
+
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+    if (profileError) {
+        return res.status(500).json({ error: 'Профиль пользователя не найден' });
+    }
+
     req.user = {
-        id: data.user.id,
-        email: data.user.email,
-        role: 'user' // роли позже можно вынести в отдельную таблицу
+        id: user.id,
+        email: user.email,
+        name: profile.name,
+        role: profile.role
     };
 
     next();
@@ -257,10 +269,10 @@ app.get('/api/sse', authMiddleware, (req, res) => {
 
 // Регистрация
 app.post('/api/auth/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email и пароль обязательны' });
+    if (!email || !password || !name) {
+        return res.status(400).json({ error: 'Имя, email и пароль обязательны' });
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -272,9 +284,20 @@ app.post('/api/auth/register', async (req, res) => {
         return res.status(400).json({ error: error.message });
     }
 
+    await supabase.from('profiles').insert({
+        id: data.user.id,
+        name,
+        role: 'user'
+    });
+
     res.json({
         ok: true,
-        user: data.user
+        user: {
+            id: data.user.id,
+            email: data.user.email,
+            name,
+            role: 'user'
+        }
     });
 });
 
@@ -440,18 +463,19 @@ app.post('/api/products', authMiddleware, adminMiddleware, async (req, res) => {
     res.json(product);
 });
 
-app.delete('/api/products/:id', authMiddleware, adminMiddleware, (req, res) => {
+app.delete('/api/products/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { id } = req.params;
-    const db = readDB();
-    
-    const index = db.products.findIndex(p => p.id === id);
-    if (index === -1) {
-        return res.status(404).json({ error: 'Товар не найден' });
+
+    const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Supabase delete error:', error);
+        return res.status(500).json({ error: 'Не удалось удалить товар' });
     }
-    
-    db.products.splice(index, 1);
-    writeDB(db);
-    
+
     res.json({ success: true });
 });
 
@@ -840,65 +864,69 @@ app.get('/api/admin/orders-history', authMiddleware, adminMiddleware, (req, res)
     res.json(db.ordersHistory.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
 });
 
-app.get('/api/admin/users', authMiddleware, adminMiddleware, (req, res) => {
-    const { search } = req.query;
-    const db = readDB();
-    
-    let users = db.users.map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        createdAt: u.createdAt
-    }));
-    
-    if (search) {
-        const searchLower = search.toLowerCase();
-        users = users.filter(u => 
-            u.name.toLowerCase().includes(searchLower) ||
-            u.email.toLowerCase().includes(searchLower)
-        );
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req, res) => {
+    // admin и superadmin могут смотреть список
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Доступ запрещён' });
     }
-    
-    res.json(users);
+
+    try {
+        // profiles
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, role, created_at');
+
+        if (profilesError) throw profilesError;
+
+        // auth.users (email)
+        const { data: authUsers, error: authError } =
+            await supabase.auth.admin.listUsers();
+
+        if (authError) throw authError;
+
+        const emailMap = {};
+        authUsers.users.forEach(u => {
+            emailMap[u.id] = u.email;
+        });
+
+        const users = profiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            email: emailMap[p.id] || '',
+            role: p.role,
+            createdAt: p.created_at
+        }));
+
+        res.json(users);
+    } catch (e) {
+        console.error('Admin users error:', e);
+        res.status(500).json({ error: 'Не удалось загрузить пользователей' });
+    }
 });
 
-app.put('/api/admin/users/:id/role', authMiddleware, adminMiddleware, (req, res) => {
-    const { id } = req.params;
-    const { role, adminCode } = req.body;
-    
-    const db = readDB();
-    
-    const user = db.users.find(u => u.id === id);
-    
-    if (!user) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-    
-    // Нельзя изменить роль superadmin
-    if (user.role === 'superadmin') {
-        return res.status(403).json({ error: 'Нельзя изменить роль главного администратора' });
-    }
-    
-    // Только superadmin может назначать/снимать админов
+app.put('/api/admin/users/:id/role', authMiddleware, async (req, res) => {
     if (req.user.role !== 'superadmin') {
-        return res.status(403).json({ error: 'Только главный администратор может управлять ролями' });
+        return res.status(403).json({ error: 'Только superadmin может менять роли' });
     }
-    
-    // Проверяем код администратора при назначении админа
-    if (role === 'admin' && adminCode !== db.settings.adminCode) {
-        return res.status(403).json({ error: 'Неверный код администратора' });
+
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Недопустимая роль' });
     }
-    
-    // Нельзя назначить superadmin через UI
-    if (role === 'superadmin') {
-        return res.status(403).json({ error: 'Нельзя назначить главного администратора' });
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', id);
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Не удалось изменить роль' });
     }
-    
-    user.role = role;
-    writeDB(db);
-    
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+
+    res.json({ ok: true });
 });
 
 
