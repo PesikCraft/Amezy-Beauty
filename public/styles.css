@@ -1720,3 +1720,17 @@ input, textarea, select {
         max-width: 360px;
     }
 }
+
+#orderDetailOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999; /* КРИТИЧНО */
+    background: rgba(0,0,0,0.6);
+}
+
+#orderDetailOverlay .order-detail {
+    background: #fff;
+    max-width: 900px;
+    margin: 40px auto;
+    border-radius: 12px;
+}
