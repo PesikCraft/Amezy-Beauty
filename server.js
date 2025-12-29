@@ -175,34 +175,28 @@ function initDB() {
     return db;
 }
 
-// ==================== AUTH MIDDLEWARE ====================
-function authMiddleware(req, res, next) {
+// ==================== AUTH MIDDLEWARE (SUPABASE AUTH) ====================
+async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Требуется авторизация' });
     }
-    
-    const token = authHeader.split(' ')[1];
-    const db = readDB();
-    const session = db.sessions.find(s => s.token === token);
-    
-    if (res.status === 401) {
-    localStorage.removeItem('amezy_token');
-    state.token = null;
-    updateAuthUI();
-    showToast('Сессия устарела, войдите снова', 'error');
-    return;
-}
-    
-    const user = db.users.find(u => u.id === session.userId);
-    
-    if (!user) {
-        return res.status(401).json({ error: 'Пользователь не найден' });
+
+    const token = authHeader.replace('Bearer ', '');
+
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data.user) {
+        return res.status(401).json({ error: 'Неверный или истёкший токен' });
     }
-    
-    req.user = user;
-    req.token = token;
+
+    req.user = {
+        id: data.user.id,
+        email: data.user.email,
+        role: 'user' // роли позже можно вынести в отдельную таблицу
+    };
+
     next();
 }
 
@@ -259,91 +253,59 @@ app.get('/api/sse', authMiddleware, (req, res) => {
 
 
 
-// ==================== AUTH ROUTES ====================
-app.post('/api/auth/register', (req, res) => {
-    const { name, email, password } = req.body;
-    
-    if (!name || !email || !password) {
-        return res.status(400).json({ error: 'Заполните все поля' });
-    }
-    
-    if (password.length < 6) {
-        return res.status(400).json({ error: 'Пароль должен быть не менее 6 символов' });
-    }
-    
-    const db = readDB();
-    
-    if (db.users.find(u => u.email === email)) {
-        return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
-    }
-    
-    const user = {
-        id: uuidv4(),
-        name,
-        email,
-        password,
-        role: 'user',
-        createdAt: new Date().toISOString()
-    };
-    
-    const token = uuidv4();
-    const session = {
-        token,
-        userId: user.id,
-        createdAt: new Date().toISOString()
-    };
-    
-    db.users.push(user);
-    db.sessions.push(session);
-    writeDB(db);
-    
-    res.json({
-        token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
-    });
-});
+// ==================== AUTH ROUTES (SUPABASE AUTH) ====================
 
-app.post('/api/auth/login', (req, res) => {
+// Регистрация
+app.post('/api/auth/register', async (req, res) => {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
-        return res.status(400).json({ error: 'Заполните все поля' });
+        return res.status(400).json({ error: 'Email и пароль обязательны' });
     }
-    
-    const db = readDB();
-    const user = db.users.find(u => u.email === email && u.password === password);
-    
-    if (!user) {
-        return res.status(401).json({ error: 'Неверный email или пароль' });
+
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+    });
+
+    if (error) {
+        return res.status(400).json({ error: error.message });
     }
-    
-    const token = uuidv4();
-    const session = {
-        token,
-        userId: user.id,
-        createdAt: new Date().toISOString()
-    };
-    
-    db.sessions.push(session);
-    writeDB(db);
-    
+
     res.json({
-        token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        ok: true,
+        user: data.user
     });
 });
 
+// Логин
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) {
+        return res.status(401).json({ error: error.message });
+    }
+
+    res.json({
+        ok: true,
+        user: data.user,
+        access_token: data.session.access_token
+    });
+});
+
+// Текущий пользователь
 app.get('/api/auth/me', authMiddleware, (req, res) => {
-    res.json({
-        user: { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role }
-    });
+    res.json({ user: req.user });
 });
 
-app.post('/api/auth/logout', authMiddleware, (req, res) => {
-    const db = readDB();
-    db.sessions = db.sessions.filter(s => s.token !== req.token);
-    writeDB(db);
-    res.json({ success: true });
+// Выход (клиент просто удаляет токен)
+app.post('/api/auth/logout', (req, res) => {
+    res.json({ ok: true });
 });
 
 // ==================== SETTINGS ====================
@@ -657,7 +619,6 @@ app.post('/api/orders', authMiddleware, (req, res) => {
         id: uuidv4(),
         orderNumber: generateOrderNumber(),
         userId: req.user.id,
-        userName: req.user.name,
         userEmail: req.user.email,
         items: orderItems,
         total,

@@ -172,18 +172,17 @@ async function handleLogin(event) {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
-        
-        state.token = data.token;
+
+        state.token = data.access_token;
         state.user = data.user;
-        
-        localStorage.setItem('amezy_token', data.token);
-        
+
+        localStorage.setItem('amezy_token', data.access_token);
+
         closeModal();
         updateAuthUI();
         connectSSE();
-        showToast('Добро пожаловать, ' + data.user.name + '!', 'success');
-        
-       
+        showToast('Добро пожаловать!', 'success');
+
         document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
     } catch (error) {
@@ -206,19 +205,19 @@ async function handleRegister(event) {
         errorEl.classList.add('hidden');
         const data = await apiRequest('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ name, email, password })
+            body: JSON.stringify({ email, password })
         });
-        
-        state.token = data.token;
+
+        state.token = data.access_token;
         state.user = data.user;
-        
-        localStorage.setItem('amezy_token', data.token);
-        
+
+        localStorage.setItem('amezy_token', data.access_token);
+
         closeModal();
         updateAuthUI();
         connectSSE();
         showToast('Регистрация успешна!', 'success');
-        
+
         document.getElementById('registerName').value = '';
         document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
@@ -271,8 +270,8 @@ function updateAuthUI() {
     if (state.user) {
         authButtons.classList.add('hidden');
         userMenu.classList.remove('hidden');
-        userName.textContent = state.user.name;
-        
+        userName.textContent = state.user.email;
+
         // Показываем админ-панель для admin и superadmin
         const isAdmin = state.user.role === 'admin' || state.user.role === 'superadmin';
         adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
@@ -960,7 +959,7 @@ function renderAdminOrders(orders) {
             <div class="admin-order-header">
                 <div class="admin-order-info">
                     <h4>${order.orderNumber}</h4>
-                    <p>${order.userName} (${order.userEmail})</p>
+                    <p>${order.userEmail}</p>
                     <p>${formatDate(order.createdAt)} • ${getPaymentText(order.paymentMethod)}</p>
                 </div>
                 <div class="admin-order-actions" onclick="event.stopPropagation()">
@@ -1043,7 +1042,7 @@ function renderAdminHistory(orders) {
             <div class="admin-order-header">
                 <div class="admin-order-info">
                     <h4>${order.orderNumber}</h4>
-                    <p>${order.userName}</p>
+                    <p>${order.userEmail || '—'}</p>
                     <p>Удалён: ${formatDate(order.deletedAt)}</p>
                 </div>
                 <span class="status-badge status-${order.status}">${getStatusText(order.status)}</span>

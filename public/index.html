@@ -344,10 +344,10 @@
         <div class="modal hidden" id="loginModal">
             <button class="modal-close" onclick="closeModal()">×</button>
             <h2 class="modal-title">Вход</h2>
-            <form onsubmit="handleLogin(event)">
+            <form onsubmit="handleLogin(event)" novalidate>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" class="form-input" id="loginEmail" required>
+                    <input type="text" class="form-input" id="loginEmail" required>
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -365,14 +365,14 @@
         <div class="modal hidden" id="registerModal">
             <button class="modal-close" onclick="closeModal()">×</button>
             <h2 class="modal-title">Регистрация</h2>
-            <form onsubmit="handleRegister(event)">
+            <form onsubmit="handleRegister(event)" novalidate>
                 <div class="form-group">
                     <label>Имя</label>
                     <input type="text" class="form-input" id="registerName" required>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" class="form-input" id="registerEmail" required>
+                    <input type="text" class="form-input" id="registerEmail" required>
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
