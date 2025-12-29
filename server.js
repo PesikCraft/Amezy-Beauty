@@ -2,6 +2,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
+
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
@@ -764,8 +765,36 @@ app.get('/api/admin/stats', authMiddleware, adminMiddleware, (req, res) => {
     });
 });
 
+// ==================== ADMIN ORDERS ====================
+
+// Все заказы (админ)
 app.get('/api/admin/orders', authMiddleware, adminMiddleware, (req, res) => {
-// Получение одного заказа для админа
+    const { status } = req.query;
+    const db = readDB();
+
+    let orders = db.orders;
+
+    if (status && status !== 'all') {
+        orders = orders.filter(o => o.status === status);
+    }
+
+    orders = orders.map(order => ({
+        ...order,
+        items: order.items.map(item => {
+            const product = db.products.find(p => p.id === item.productId);
+            return {
+                ...item,
+                name: product?.name || 'Товар удалён',
+                price: item.price,
+                total: item.price * item.quantity
+            };
+        })
+    }));
+
+    res.json(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+});
+
+// Один заказ (админ)
 app.get('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => {
     const { id } = req.params;
     const db = readDB();
@@ -789,31 +818,6 @@ app.get('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => 
     };
 
     res.json(orderWithDetails);
-});
-    const { status } = req.query;
-    const db = readDB();
-    
-    let orders = db.orders;
-    
-    if (status && status !== 'all') {
-        orders = orders.filter(o => o.status === status);
-    }
-    
-    // Добавляем информацию о товарах
-    orders = orders.map(order => ({
-        ...order,
-        items: order.items.map(item => {
-            const product = db.products.find(p => p.id === item.productId);
-            return {
-                ...item,
-                name: product?.name || 'Товар удалён',
-                price: item.price,
-                total: item.price * item.quantity
-            };
-        })
-    }));
-    
-    res.json(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
 });
 
 app.put('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => {
