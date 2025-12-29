@@ -205,7 +205,7 @@ async function handleRegister(event) {
         errorEl.classList.add('hidden');
         const data = await apiRequest('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ name, email, password })
         });
 
         state.token = data.access_token;
@@ -270,7 +270,7 @@ function updateAuthUI() {
     if (state.user) {
         authButtons.classList.add('hidden');
         userMenu.classList.remove('hidden');
-        userName.textContent = state.user.email;
+        userName.textContent = state.user.name;
 
         // Показываем админ-панель для admin и superadmin
         const isAdmin = state.user.role === 'admin' || state.user.role === 'superadmin';
