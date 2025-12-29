@@ -951,6 +951,7 @@ function renderAdminOrders(orders) {
         listEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">Заказов нет</p>';
         return;
     }
+
     
     const statusOptions = ['pending', 'paid', 'processing', 'shipping', 'delivered', 'done', 'cancelled'];
     
@@ -1575,5 +1576,6 @@ async function init() {
         }
     });
 }
+
 
 document.addEventListener('DOMContentLoaded', init);
