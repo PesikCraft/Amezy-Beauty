@@ -45,17 +45,7 @@
       "icon": "🦶"
     }
   ],
-  "products": [
-    {
-      "id": "040b6fbd-6790-4f72-b23c-4a64162c7aac",
-      "name": "xuy ego",
-      "price": 5000,
-      "categoryId": "cat-feet",
-      "description": "Pizda shreka",
-      "image": "/uploads/6ac601f9-ad67-408a-9804-82a3140200e6.jpeg",
-      "createdAt": "2025-12-28T17:41:00.434Z"
-    }
-  ],
+  "products": [],
   "orders": [],
   "ordersHistory": [],
   "sessions": [
@@ -130,9 +120,14 @@
       "createdAt": "2025-12-28T22:51:11.023Z"
     },
     {
-      "token": "bbada107-613a-4811-8c5f-3f2632984754",
+      "token": "1a3c268f-ca58-4b54-b3f9-aac4b2135332",
+      "userId": "a8a907ff-66b4-4df6-b0b7-aa4adc6d47e5",
+      "createdAt": "2025-12-29T00:00:36.190Z"
+    },
+    {
+      "token": "48843ad2-4781-412e-b33e-74abd65039a9",
       "userId": "4605be4b-b023-44da-b7f1-8e0ac3a24a68",
-      "createdAt": "2025-12-28T22:53:43.126Z"
+      "createdAt": "2025-12-29T00:01:23.790Z"
     }
   ],
   "settings": {
