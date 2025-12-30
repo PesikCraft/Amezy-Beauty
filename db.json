@@ -45,78 +45,164 @@
       "icon": "🦶"
     }
   ],
-
   "products": [],
-
-  "products": [
+  "orders": [
     {
-      "id": "41e33ee2-2c42-49c4-a347-6898e9db7393",
-      "name": "Увлажняющий крем для лица",
-      "price": 15000,
-      "categoryId": "cat-face",
-      "description": "Глубокое увлажнение на 24 часа",
-      "image": null
+      "id": "39d1070e-9781-4dc2-a23c-89f60dac0c82",
+      "orderNumber": "AB251230-9861",
+      "userId": "b5d16faa-3004-4259-9f1e-3363eecc3e46",
+      "userEmail": "persikkopa0@gmail.com",
+      "items": [
+        {
+          "productId": "c64dba43-0aa1-4442-af71-e93243ed7a8e",
+          "name": "Test",
+          "quantity": 1,
+          "price": 5000
+        }
+      ],
+      "total": 5000,
+      "paymentMethod": "cash",
+      "status": "pending",
+      "address": "Хунань, Китай",
+      "mapCoordinates": "27.6662087,111.7487063",
+      "mapAddress": "Хунань, Китай",
+      "currency": "AMD",
+      "statusHistory": [
+        {
+          "status": "pending",
+          "timestamp": "2025-12-30T08:28:29.859Z",
+          "comment": "Заказ создан"
+        }
+      ],
+      "createdAt": "2025-12-30T08:28:29.860Z"
     },
     {
-      "id": "d0bab79a-11a2-47e8-92fa-c81da9a6508b",
-      "name": "Сыворотка с витамином C",
-      "price": 25000,
-      "categoryId": "cat-face",
-      "description": "Осветляет и выравнивает тон кожи",
-      "image": null
-    },
-    {
-      "id": "e429167e-ea4a-4d1f-bd59-6cc22da397d0",
-      "name": "Маска для лица",
-      "price": 8000,
-      "categoryId": "cat-face",
-      "description": "Питательная маска с коллагеном",
-      "image": null
-    },
-    {
-      "id": "38d94660-307e-4df4-b59e-822a135dcb5b",
-      "name": "Лосьон для тела",
-      "price": 12000,
-      "categoryId": "cat-body",
-      "description": "Нежный уход за кожей тела",
-      "image": null
-    },
-    {
-      "id": "af3aad8b-016b-45b1-879c-6736922e5164",
-      "name": "Скраб для тела",
-      "price": 10000,
-      "categoryId": "cat-body",
-      "description": "Отшелушивающий скраб с морской солью",
-      "image": null
-    },
-    {
-      "id": "5abd244e-2691-4985-80ac-a7144ae7ae76",
-      "name": "Масло для тела",
-      "price": 18000,
-      "categoryId": "cat-body",
-      "description": "Питательное масло с витамином E",
-      "image": null
-    },
-    {
-      "id": "0766a33e-b453-493d-b496-a50649cecb37",
-      "name": "Крем для ног",
-      "price": 7000,
-      "categoryId": "cat-feet",
-      "description": "Смягчающий крем для стоп",
-      "image": null
-    },
-    {
-      "id": "f1213290-09ce-415c-aee4-1cfdc32f9250",
-      "name": "Скраб для ног",
-      "price": 6000,
-      "categoryId": "cat-feet",
-      "description": "Отшелушивающий скраб для пяток",
-      "image": null
+      "id": "16753619-b303-4b76-8fec-08583883533e",
+      "orderNumber": "AB251230-7913",
+      "userId": "b5d16faa-3004-4259-9f1e-3363eecc3e46",
+      "userEmail": "persikkopa0@gmail.com",
+      "items": [
+        {
+          "productId": "87aba9a8-cde3-4c5b-a941-27f0ea813700",
+          "name": "Test",
+          "quantity": 1,
+          "price": 4321
+        }
+      ],
+      "total": 4321,
+      "paymentMethod": "cash",
+      "status": "pending",
+      "address": "Shibuya, Route 3 Shibuya Line, Shibuya 2, Shibuya, Dogenzaka, Сибуя, Токио, 150-0036, Япония",
+      "mapCoordinates": "35.6585428,139.7015098",
+      "mapAddress": "Shibuya, Route 3 Shibuya Line, Shibuya 2, Shibuya, Dogenzaka, Сибуя, Токио, 150-0036, Япония",
+      "currency": "AMD",
+      "statusHistory": [
+        {
+          "status": "pending",
+          "timestamp": "2025-12-30T09:33:32.056Z",
+          "comment": "Заказ создан"
+        }
+      ],
+      "createdAt": "2025-12-30T09:33:32.056Z"
     }
   ],
-
-  "orders": [],
-  "ordersHistory": [],
+  "ordersHistory": [
+    {
+      "id": "79c537c7-67e0-4ab2-b892-6a64ff059785",
+      "orderNumber": "AB251230-7412",
+      "userId": "b5d16faa-3004-4259-9f1e-3363eecc3e46",
+      "userEmail": "persikkopa0@gmail.com",
+      "items": [
+        {
+          "productId": "d31681d6-3190-4dcf-9f61-41b9aafbad46",
+          "name": "testo",
+          "quantity": 2,
+          "price": 12312
+        }
+      ],
+      "total": 24624,
+      "paymentMethod": "cash",
+      "status": "pending",
+      "address": "27, улица Унана Аветисяна, 7-й массив Нор-Норка, Нор Норк, Ереван, 0092, Армения",
+      "mapCoordinates": "40.1785835,44.5638954",
+      "mapAddress": "27, улица Унана Аветисяна, 7-й массив Нор-Норка, Нор Норк, Ереван, 0092, Армения",
+      "currency": "AMD",
+      "statusHistory": [
+        {
+          "status": "pending",
+          "timestamp": "2025-12-30T08:17:53.956Z",
+          "comment": "Заказ создан"
+        }
+      ],
+      "createdAt": "2025-12-30T08:17:53.956Z",
+      "deletedAt": "2025-12-30T08:23:55.803Z"
+    },
+    {
+      "id": "19d02d9c-8da1-404c-8088-b2686088cfa8",
+      "orderNumber": "AB251230-9319",
+      "userId": "b5d16faa-3004-4259-9f1e-3363eecc3e46",
+      "userEmail": "persikkopa0@gmail.com",
+      "items": [
+        {
+          "productId": "c64dba43-0aa1-4442-af71-e93243ed7a8e",
+          "name": "Test",
+          "quantity": 1,
+          "price": 5000
+        }
+      ],
+      "total": 5000,
+      "paymentMethod": "cash",
+      "status": "shipping",
+      "address": "27, улица Унана Аветисяна, 7-й массив Нор-Норка, Нор Норк, Ереван, 0092, Армения",
+      "mapCoordinates": "40.1785835,44.5638954",
+      "mapAddress": "27, улица Унана Аветисяна, 7-й массив Нор-Норка, Нор Норк, Ереван, 0092, Армения",
+      "currency": "AMD",
+      "statusHistory": [
+        {
+          "status": "pending",
+          "timestamp": "2025-12-30T08:22:33.844Z",
+          "comment": "Заказ создан"
+        },
+        {
+          "status": "shipping",
+          "timestamp": "2025-12-30T08:23:59.134Z",
+          "comment": "Статус изменён с pending на shipping"
+        }
+      ],
+      "createdAt": "2025-12-30T08:22:33.844Z",
+      "deletedAt": "2025-12-30T08:27:10.626Z"
+    },
+    {
+      "id": "7af27790-a8fd-440f-9537-a13ca469fed6",
+      "orderNumber": "AB251230-5069",
+      "userId": "b5d16faa-3004-4259-9f1e-3363eecc3e46",
+      "userEmail": "persikkopa0@gmail.com",
+      "items": [
+        {
+          "productId": "c64dba43-0aa1-4442-af71-e93243ed7a8e",
+          "name": "Test",
+          "quantity": 1,
+          "price": 5000
+        }
+      ],
+      "total": 5000,
+      "paymentMethod": "cash",
+      "status": "pending",
+      "address": "ргтфт",
+      "mapCoordinates": null,
+      "mapAddress": null,
+      "currency": "AMD",
+      "statusHistory": [
+        {
+          "status": "pending",
+          "timestamp": "2025-12-30T08:27:30.234Z",
+          "comment": "Заказ создан"
+        }
+      ],
+      "createdAt": "2025-12-30T08:27:30.234Z",
+      "deletedAt": "2025-12-30T08:28:02.824Z"
+    }
+  ],
   "sessions": [
     {
       "token": "d4aa0514-b3bb-4006-8feb-7d33b94988ea",
@@ -202,7 +288,6 @@
       "token": "6d565594-07de-4c9f-b718-bb3d7b9548a2",
       "userId": "4605be4b-b023-44da-b7f1-8e0ac3a24a68",
       "createdAt": "2025-12-29T09:53:48.899Z"
-
     }
   ],
   "settings": {
@@ -227,8 +312,4 @@
       }
     }
   }
-
 }
-
-
-
