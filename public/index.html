@@ -38,10 +38,25 @@
                     <button class="btn btn-primary btn-sm" onclick="showModal('register')">Регистрация</button>
                 </div>
                 
-                <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu hidden" id="userBlock">
                     <span class="user-name" id="userName"></span>
-                    <button class="btn btn-primary btn-sm" id="adminBtn" style="display:none" onclick="showPage('admin')">Админ</button>
-                    <button class="btn btn-text btn-sm" onclick="logout()">Выйти</button>
+
+                    <button
+                        class="btn btn-primary btn-sm"
+                        id="adminBtn"
+                        style="display:none"
+                        onclick="showPage('admin')"
+                    >
+                        Админка
+                    </button>
+
+                    <button
+                        class="btn btn-text btn-sm"
+                        id="logoutBtn"
+                        onclick="logout()"
+                    >
+                        Выйти
+                    </button>
                 </div>
             </div>
         </div>
@@ -383,6 +398,41 @@
             </form>
             <p class="modal-footer-text">
                 Уже есть аккаунт? <a href="#" onclick="closeModal(); showModal('login'); return false;">Войти</a>
+            </p>
+        </div>
+
+        <!-- Confirm Email Modal -->
+        <div class="modal hidden" id="confirmEmailModal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title">Подтверждение email</h2>
+
+            <p style="margin-bottom:16px;color:#555;">
+                Мы отправили письмо с подтверждением на вашу почту.
+                Перейдите по ссылке из письма, затем подтвердите ниже.
+            </p>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                <input
+                    type="checkbox"
+                    id="emailConfirmedCheckbox"
+                    onchange="toggleConfirmBtn()"
+                />
+                <label for="emailConfirmedCheckbox" style="cursor:pointer;">
+                    Я подтвердил email
+                </label>
+            </div>
+
+            <button
+                class="btn btn-primary btn-block"
+                id="confirmEmailBtn"
+                disabled
+                onclick="confirmEmailDone()"
+            >
+                Продолжить
+            </button>
+
+            <p id="confirmEmailError" style="display:none;color:#d33;margin-top:12px;">
+                Email ещё не подтверждён. Проверьте почту.
             </p>
         </div>
 

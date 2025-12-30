@@ -161,11 +161,11 @@ function formatPrice(price, currency = 'AMD') {
 // ==================== AUTH ====================
 async function handleLogin(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
-    
+
     try {
         errorEl.classList.add('hidden');
         const data = await apiRequest('/auth/login', {
@@ -177,6 +177,7 @@ async function handleLogin(event) {
         state.user = data.user;
 
         localStorage.setItem('amezy_token', data.access_token);
+        localStorage.setItem('amezy_user', JSON.stringify(data.user));
 
         closeModal();
         updateAuthUI();
@@ -189,18 +190,16 @@ async function handleLogin(event) {
         errorEl.textContent = error.message;
         errorEl.classList.remove('hidden');
     }
-
-    // (resetStatsBtn UI logic moved to updateAuthUI)
 }
 
 async function handleRegister(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     const errorEl = document.getElementById('registerError');
-    
+
     try {
         errorEl.classList.add('hidden');
         const data = await apiRequest('/auth/register', {
@@ -208,15 +207,14 @@ async function handleRegister(event) {
             body: JSON.stringify({ name, email, password })
         });
 
-        state.token = data.access_token;
-        state.user = data.user;
-
-        localStorage.setItem('amezy_token', data.access_token);
+        // ❌ НЕ логиним пользователя до подтверждения email
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem('amezy_token');
+        localStorage.removeItem('amezy_user');
 
         closeModal();
-        updateAuthUI();
-        connectSSE();
-        showToast('Регистрация успешна!', 'success');
+        showEmailConfirmNotice();
 
         document.getElementById('registerName').value = '';
         document.getElementById('registerEmail').value = '';
@@ -225,24 +223,102 @@ async function handleRegister(event) {
         errorEl.textContent = error.message;
         errorEl.classList.remove('hidden');
     }
+
 }
 
+// ==================== EMAIL CONFIRM NOTICE MODAL ====================
+function showEmailConfirmNotice() {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('hidden');
+
+    let modal = document.getElementById('emailConfirmModal');
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'emailConfirmModal';
+        modal.className = 'modal';
+        modal.style.maxWidth = '420px';
+        modal.style.padding = '32px';
+        modal.innerHTML = `
+<h2 style="text-align:center">Подтверждение email</h2>
+<p style="margin-bottom:20px;text-align:center">
+    Мы отправили письмо с ссылкой для подтверждения email.<br>
+    Перейдите по ссылке в письме, затем вернитесь на сайт.
+</p>
+
+<label style="
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:24px;
+    font-size:14px;
+">
+    <input type="checkbox" id="emailConfirmCheckbox" style="transform:scale(1.2)">
+    Я подтвердил email
+</label>
+
+<div style="display:flex;justify-content:center">
+    <button
+        class="btn btn-primary"
+        id="emailConfirmContinue"
+        disabled
+        style="
+            padding:14px 36px;
+            font-size:14px;
+            min-width:220px;
+        "
+    >
+        Продолжить
+    </button>
+</div>
+        `;
+        overlay.appendChild(modal);
+
+        const checkbox = modal.querySelector('#emailConfirmCheckbox');
+        const btn = modal.querySelector('#emailConfirmContinue');
+
+        checkbox.addEventListener('change', () => {
+            btn.disabled = !checkbox.checked;
+        });
+
+        btn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+            modal.classList.add('hidden');
+
+            showToast('Теперь вы можете войти в аккаунт', 'info');
+
+            // Открываем окно авторизации
+            showModal('login');
+        });
+    }
+
+    modal.classList.remove('hidden');
+}
+
+// ==================== EMAIL CONFIRMATION ====================
 async function checkAuth() {
     const token = localStorage.getItem('amezy_token');
-    
     if (!token) return;
-    
+
     state.token = token;
-    
+
     try {
         const data = await apiRequest('/auth/me');
+
+        // ❗️ВАЖНО: backend решает, подтверждён email или нет
         state.user = data.user;
+
+        localStorage.setItem('amezy_user', JSON.stringify(data.user));
+
         updateAuthUI();
         connectSSE();
     } catch (error) {
         localStorage.removeItem('amezy_token');
+        localStorage.removeItem('amezy_user');
         state.token = null;
         state.user = null;
+        updateAuthUI();
     }
 }
 
@@ -250,11 +326,12 @@ async function logout() {
     try {
         await apiRequest('/auth/logout', { method: 'POST' });
     } catch (error) {}
-    
+
+    localStorage.removeItem('amezy_user');
     localStorage.removeItem('amezy_token');
     state.token = null;
     state.user = null;
-    
+
     disconnectSSE();
     updateAuthUI();
     showPage('home');
@@ -263,22 +340,37 @@ async function logout() {
 
 function updateAuthUI() {
     const authButtons = document.getElementById('authButtons');
-    const userMenu = document.getElementById('userMenu');
+    const userMenu = document.getElementById('userBlock'); // ← ВАЖНО
     const userName = document.getElementById('userName');
     const adminBtn = document.getElementById('adminBtn');
-    
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (!authButtons || !userMenu) {
+        console.error('Auth UI elements not found');
+        return;
+    }
+
     if (state.user) {
         authButtons.classList.add('hidden');
         userMenu.classList.remove('hidden');
-        userName.textContent = state.user.name;
 
-        // Показываем админ-панель для admin и superadmin
-        const isAdmin = state.user.role === 'admin' || state.user.role === 'superadmin';
+        // имя
+        userName.textContent = state.user.name || state.user.email;
+
+        // админка
+        const isAdmin =
+            state.user.role === 'admin' ||
+            state.user.role === 'superadmin';
+
         adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
     } else {
         authButtons.classList.remove('hidden');
         userMenu.classList.add('hidden');
+        userName.textContent = '';
+        adminBtn.style.display = 'none';
     }
+
+    // superadmin кнопка
     const resetBtn = document.getElementById('resetStatsBtn');
     if (resetBtn) {
         resetBtn.style.display =
@@ -287,6 +379,8 @@ function updateAuthUI() {
                 : 'none';
     }
 }
+
+
 
 function isAdmin() {
     return state.user && (state.user.role === 'admin' || state.user.role === 'superadmin');
@@ -1567,7 +1661,7 @@ async function init() {
     await loadCategories();
     await loadProducts();
     loadCart();
-    
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeModal();

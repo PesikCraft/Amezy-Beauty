@@ -101,11 +101,9 @@ function writeDB(data) {
 function initDB() {
     let db = readDB();
     let needsSave = false;
-    
+
     // Инициализация структуры
     if (!db.users) { db.users = []; needsSave = true; }
-    if (!db.categories) { db.categories = []; needsSave = true; }
-    if (!db.products) { db.products = []; needsSave = true; }
     if (!db.orders) { db.orders = []; needsSave = true; }
     if (!db.ordersHistory) { db.ordersHistory = []; needsSave = true; }
     if (!db.sessions) { db.sessions = []; needsSave = true; }
@@ -125,7 +123,7 @@ function initDB() {
         };
         needsSave = true;
     }
-    
+
     // Создаём админа по умолчанию
     if (!db.users.find(u => u.role === 'admin')) {
         db.users.push({
@@ -138,40 +136,11 @@ function initDB() {
         });
         needsSave = true;
     }
-    
-    // Создаём категории по умолчанию
-    if (db.categories.length === 0) {
-        db.categories = [
-            { id: uuidv4(), name: 'Уход за лицом', slug: 'face', icon: '✨' },
-            { id: uuidv4(), name: 'Уход за телом', slug: 'body', icon: '🧴' },
-            { id: uuidv4(), name: 'Уход за ногами', slug: 'feet', icon: '🦶' }
-        ];
-        needsSave = true;
-    }
-    
-    // Создаём товары по умолчанию
-    if (db.products.length === 0) {
-        const faceCategory = db.categories.find(c => c.slug === 'face');
-        const bodyCategory = db.categories.find(c => c.slug === 'body');
-        const feetCategory = db.categories.find(c => c.slug === 'feet');
-        
-        db.products = [
-            { id: uuidv4(), name: 'Увлажняющий крем для лица', price: 15000, categoryId: faceCategory?.id, description: 'Глубокое увлажнение на 24 часа', image: null },
-            { id: uuidv4(), name: 'Сыворотка с витамином C', price: 25000, categoryId: faceCategory?.id, description: 'Осветляет и выравнивает тон кожи', image: null },
-            { id: uuidv4(), name: 'Маска для лица', price: 8000, categoryId: faceCategory?.id, description: 'Питательная маска с коллагеном', image: null },
-            { id: uuidv4(), name: 'Лосьон для тела', price: 12000, categoryId: bodyCategory?.id, description: 'Нежный уход за кожей тела', image: null },
-            { id: uuidv4(), name: 'Скраб для тела', price: 10000, categoryId: bodyCategory?.id, description: 'Отшелушивающий скраб с морской солью', image: null },
-            { id: uuidv4(), name: 'Масло для тела', price: 18000, categoryId: bodyCategory?.id, description: 'Питательное масло с витамином E', image: null },
-            { id: uuidv4(), name: 'Крем для ног', price: 7000, categoryId: feetCategory?.id, description: 'Смягчающий крем для стоп', image: null },
-            { id: uuidv4(), name: 'Скраб для ног', price: 6000, categoryId: feetCategory?.id, description: 'Отшелушивающий скраб для пяток', image: null }
-        ];
-        needsSave = true;
-    }
-    
+
     if (needsSave) {
         writeDB(db);
     }
-    
+
     return db;
 }
 
@@ -192,21 +161,29 @@ async function authMiddleware(req, res, next) {
 
     const user = data.user;
 
+    // ⛔ ЖЁСТКАЯ ПРОВЕРКА: email ОБЯЗАН быть подтверждён в Supabase
+    if (!user.email_confirmed_at) {
+        return res.status(403).json({
+            error: 'Email ещё не подтверждён. Проверьте почту.'
+        });
+    }
+
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-    if (profileError) {
-        return res.status(500).json({ error: 'Профиль пользователя не найден' });
+    if (profileError || !profile) {
+        return res.status(403).json({ error: 'Профиль пользователя не найден' });
     }
 
     req.user = {
         id: user.id,
         email: user.email,
         name: profile.name,
-        role: profile.role
+        role: profile.role,
+        email_confirmed: true
     };
 
     next();
@@ -306,13 +283,18 @@ app.post('/api/auth/login', async (req, res) => {
         password
     });
 
-    if (error) {
-        return res.status(401).json({ error: error.message });
+    if (error || !data.user) {
+        return res.status(401).json({ error: 'Неверный email или пароль' });
+    }
+
+    if (!data.user.email_confirmed_at) {
+        return res.status(403).json({
+            error: 'Подтвердите email. Мы отправили письмо.'
+        });
     }
 
     res.json({
         ok: true,
-        user: data.user,
         access_token: data.session.access_token
     });
 });
@@ -321,6 +303,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/auth/me', authMiddleware, (req, res) => {
     res.json({ user: req.user });
 });
+
 
 // Выход (клиент просто удаляет токен)
 app.post('/api/auth/logout', (req, res) => {
@@ -334,39 +317,43 @@ app.get('/api/settings', (req, res) => {
 });
 
 // ==================== CATEGORIES ====================
-app.get('/api/categories', (req, res) => {
-    const db = readDB();
-    res.json(db.categories);
+app.get('/api/categories', async (req, res) => {
+    const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Не удалось загрузить категории' });
+    }
+
+    res.json(data);
 });
 
-app.post('/api/categories', authMiddleware, adminMiddleware, (req, res) => {
+app.post('/api/categories', authMiddleware, adminMiddleware, async (req, res) => {
     const { name, icon } = req.body;
-    
+
     if (!name) {
         return res.status(400).json({ error: 'Укажите название категории' });
     }
-    
-    const db = readDB();
-    
+
     const slug = name.toLowerCase()
-        .replace(/[а-яё]/g, char => {
-            const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
-            return map[char] || char;
-        })
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '');
-    
-    const category = {
-        id: uuidv4(),
-        name,
-        slug,
-        icon: icon || '📦'
-    };
-    
-    db.categories.push(category);
-    writeDB(db);
-    
-    res.json(category);
+
+    const { data, error } = await supabase
+        .from('categories')
+        .insert([{ name, slug, icon: icon || '📦' }])
+        .select()
+        .single();
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Не удалось создать категорию' });
+    }
+
+    res.json(data);
 });
 
 app.put('/api/categories/:id', authMiddleware, adminMiddleware, (req, res) => {
@@ -387,18 +374,19 @@ app.put('/api/categories/:id', authMiddleware, adminMiddleware, (req, res) => {
     res.json(category);
 });
 
-app.delete('/api/categories/:id', authMiddleware, adminMiddleware, (req, res) => {
+app.delete('/api/categories/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { id } = req.params;
-    const db = readDB();
-    
-    const index = db.categories.findIndex(c => c.id === id);
-    if (index === -1) {
-        return res.status(404).json({ error: 'Категория не найдена' });
+
+    const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Не удалось удалить категорию' });
     }
-    
-    db.categories.splice(index, 1);
-    writeDB(db);
-    
+
     res.json({ success: true });
 });
 
@@ -553,18 +541,13 @@ app.get('/api/orders', authMiddleware, (req, res) => {
     
     let orders = db.orders.filter(o => o.userId === req.user.id);
     
-    // Добавляем информацию о товарах
+    // Используем сохранённые данные о товарах в заказе
     orders = orders.map(order => ({
         ...order,
-        items: order.items.map(item => {
-            const product = db.products.find(p => p.id === item.productId);
-            return {
-                ...item,
-                name: product?.name || 'Товар удалён',
-                price: item.price,
-                total: item.price * item.quantity
-            };
-        })
+        items: order.items.map(item => ({
+            ...item,
+            total: item.price * item.quantity
+        }))
     }));
     
     res.json(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
@@ -582,66 +565,74 @@ app.get('/api/orders/:id', authMiddleware, (req, res) => {
     
     // Проверяем доступ
     if (
-    order.userId !== req.user.id &&
-    req.user.role !== 'admin' &&
-    req.user.role !== 'superadmin'
-) {
-    return res.status(403).json({ error: 'Доступ запрещён' });
-}
+        order.userId !== req.user.id &&
+        req.user.role !== 'admin' &&
+        req.user.role !== 'superadmin'
+    ) {
+        return res.status(403).json({ error: 'Доступ запрещён' });
+    }
     
-    // Добавляем информацию о товарах
+    // Используем сохранённые данные о товарах в заказе
     const orderWithDetails = {
         ...order,
-        items: order.items.map(item => {
-            const product = db.products.find(p => p.id === item.productId);
-            return {
-                ...item,
-                name: product?.name || 'Товар удалён',
-                price: item.price,
-                total: item.price * item.quantity
-            };
-        })
+        items: order.items.map(item => ({
+            ...item,
+            total: item.price * item.quantity
+        }))
     };
     
     res.json(orderWithDetails);
 });
 
-app.post('/api/orders', authMiddleware, (req, res) => {
+app.post('/api/orders', authMiddleware, async (req, res) => {
+    if (!req.user.email_confirmed) {
+        return res.status(403).json({
+            error: 'Подтвердите email, чтобы оформить заказ'
+        });
+    }
     const { items, paymentMethod, address, mapCoordinates, mapAddress, currency } = req.body;
-    
+
     if (!items || items.length === 0) {
         return res.status(400).json({ error: 'Корзина пуста' });
     }
-    
+
     if (!address) {
         return res.status(400).json({ error: 'Укажите адрес доставки' });
     }
-    
-    const db = readDB();
-    
-    // Рассчитываем сумму
+
+    // Новый расчёт товаров через Supabase
     let total = 0;
-    const orderItems = items.map(item => {
-        const product = db.products.find(p => p.id === item.productId);
-        if (!product) {
-            throw new Error('Товар не найден');
+    const orderItems = [];
+
+    for (const item of items) {
+        const { data: product, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', item.productId)
+            .single();
+
+        if (error || !product) {
+            return res.status(400).json({ error: 'Товар не найден' });
         }
+
         total += product.price * item.quantity;
-        return {
-            productId: item.productId,
-            name: product.name,        // 👈 ВАЖНО
+
+        orderItems.push({
+            productId: product.id,
+            name: product.name,
             quantity: item.quantity,
             price: product.price
-        };
-    });
-    
+        });
+    }
+
+    const db = readDB();
     const order = {
         id: uuidv4(),
         orderNumber: generateOrderNumber(),
         userId: req.user.id,
         userEmail: req.user.email,
         items: orderItems,
-        total,
+        total: total,
         paymentMethod,
         status: paymentMethod === 'card' ? 'awaiting_payment' : 'pending',
         address,
@@ -655,16 +646,16 @@ app.post('/api/orders', authMiddleware, (req, res) => {
         }],
         createdAt: new Date().toISOString()
     };
-    
+
     db.orders.push(order);
     writeDB(db);
     sendOrderToTelegram(order);
-    
+
     // Уведомляем админов только если оплата наличными
     if (paymentMethod === 'cash') {
         broadcastToAdmins('new_order', order);
     }
-    
+
     res.json(order);
 });
 
@@ -761,15 +752,10 @@ app.get('/api/admin/orders', authMiddleware, adminMiddleware, (req, res) => {
 
     orders = orders.map(order => ({
         ...order,
-        items: order.items.map(item => {
-            const product = db.products.find(p => p.id === item.productId);
-            return {
-                ...item,
-                name: product?.name || 'Товар удалён',
-                price: item.price,
-                total: item.price * item.quantity
-            };
-        })
+        items: order.items.map(item => ({
+            ...item,
+            total: item.price * item.quantity
+        }))
     }));
 
     res.json(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
@@ -787,15 +773,10 @@ app.get('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => 
 
     const orderWithDetails = {
         ...order,
-        items: order.items.map(item => {
-            const product = db.products.find(p => p.id === item.productId);
-            return {
-                ...item,
-                name: product?.name || 'Товар удалён',
-                price: item.price,
-                total: item.price * item.quantity
-            };
-        })
+        items: order.items.map(item => ({
+            ...item,
+            total: item.price * item.quantity
+        }))
     };
 
     res.json(orderWithDetails);
