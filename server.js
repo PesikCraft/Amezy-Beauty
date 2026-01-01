@@ -1,21 +1,21 @@
 if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
+    require('dotenv').config();
 }
 
 
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
 );
 
 // Feature flag for Supabase-backed products
 const USE_SUPABASE_PRODUCTS = true;
 
 console.log('[ENV]', {
-  SUPABASE_URL: process.env.SUPABASE_URL ? 'OK' : 'MISSING',
-  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'OK' : 'MISSING'
+    SUPABASE_URL: process.env.SUPABASE_URL ? 'OK' : 'MISSING',
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'OK' : 'MISSING'
 });
 console.log('SUPABASE_URL VALUE =', process.env.SUPABASE_URL);
 const { initTelegramBot, sendOrderToTelegram } = require('./telegram');
@@ -230,11 +230,11 @@ app.get('/api/sse', authMiddleware, (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    
+
     sseClients.set(req.user.id, res);
-    
+
     res.write('event: connected\ndata: {}\n\n');
-    
+
     req.on('close', () => {
         sseClients.delete(req.user.id);
     });
@@ -359,17 +359,17 @@ app.post('/api/categories', authMiddleware, adminMiddleware, async (req, res) =>
 app.put('/api/categories/:id', authMiddleware, adminMiddleware, (req, res) => {
     const { id } = req.params;
     const { name, icon } = req.body;
-    
+
     const db = readDB();
     const category = db.categories.find(c => c.id === id);
-    
+
     if (!category) {
         return res.status(404).json({ error: 'Категория не найдена' });
     }
-    
+
     if (name) category.name = name;
     if (icon) category.icon = icon;
-    
+
     writeDB(db);
     res.json(category);
 });
@@ -538,9 +538,9 @@ function generateOrderNumber() {
 
 app.get('/api/orders', authMiddleware, (req, res) => {
     const db = readDB();
-    
+
     let orders = db.orders.filter(o => o.userId === req.user.id);
-    
+
     // Используем сохранённые данные о товарах в заказе
     orders = orders.map(order => ({
         ...order,
@@ -549,20 +549,20 @@ app.get('/api/orders', authMiddleware, (req, res) => {
             total: item.price * item.quantity
         }))
     }));
-    
+
     res.json(orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
 });
 
 app.get('/api/orders/:id', authMiddleware, (req, res) => {
     const { id } = req.params;
     const db = readDB();
-    
+
     const order = db.orders.find(o => o.id === id);
-    
+
     if (!order) {
         return res.status(404).json({ error: 'Заказ не найден' });
     }
-    
+
     // Проверяем доступ
     if (
         order.userId !== req.user.id &&
@@ -571,7 +571,7 @@ app.get('/api/orders/:id', authMiddleware, (req, res) => {
     ) {
         return res.status(403).json({ error: 'Доступ запрещён' });
     }
-    
+
     // Используем сохранённые данные о товарах в заказе
     const orderWithDetails = {
         ...order,
@@ -580,7 +580,7 @@ app.get('/api/orders/:id', authMiddleware, (req, res) => {
             total: item.price * item.quantity
         }))
     };
-    
+
     res.json(orderWithDetails);
 });
 
@@ -662,21 +662,21 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
 app.post('/api/orders/:id/confirm-payment', authMiddleware, (req, res) => {
     const { id } = req.params;
     const db = readDB();
-    
+
     const order = db.orders.find(o => o.id === id);
-    
+
     if (!order) {
         return res.status(404).json({ error: 'Заказ не найден' });
     }
-    
+
     if (order.userId !== req.user.id) {
         return res.status(403).json({ error: 'Доступ запрещён' });
     }
-    
+
     if (order.status !== 'awaiting_payment') {
         return res.status(400).json({ error: 'Заказ уже обработан' });
     }
-    
+
     order.status = 'pending';
     order.paymentConfirmedAt = new Date().toISOString();
     order.statusHistory.push({
@@ -684,50 +684,50 @@ app.post('/api/orders/:id/confirm-payment', authMiddleware, (req, res) => {
         timestamp: new Date().toISOString(),
         comment: 'Оплата подтверждена пользователем'
     });
-    
+
     writeDB(db);
-    
+
     // Уведомляем админов
     broadcastToAdmins('payment_confirmed', order);
-    
+
     res.json(order);
 });
 
 // ==================== ADMIN ====================
 app.get('/api/admin/stats', authMiddleware, adminMiddleware, (req, res) => {
     const db = readDB();
-    
+
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Считаем только оплаченные/выполненные заказы
     const paidStatuses = [
-  'pending',
-  'processing',
-  'shipping',
-  'delivered'
-];
-    
+        'pending',
+        'processing',
+        'shipping',
+        'delivered'
+    ];
+
     const allOrders = [...db.orders, ...db.ordersHistory];
     const paidOrders = allOrders.filter(o => paidStatuses.includes(o.status) || o.paymentMethod === 'cash');
-    
+
     const totalToday = paidOrders
         .filter(o => new Date(o.createdAt) >= startOfDay)
         .reduce((sum, o) => sum + o.total, 0);
-    
+
     const totalMonth = paidOrders
         .filter(o => new Date(o.createdAt) >= startOfMonth)
         .reduce((sum, o) => sum + o.total, 0);
-    
+
     const totalAll = paidOrders.reduce((sum, o) => sum + o.total, 0);
-    
+
     // Подсчёт по статусам
     const statusCounts = {};
     db.orders.forEach(o => {
         statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
     });
-    
+
     res.json({
         totalToday,
         totalMonth,
@@ -785,14 +785,14 @@ app.get('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => 
 app.put('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => {
     const { id } = req.params;
     const { status, comment } = req.body;
-    
+
     const db = readDB();
     const order = db.orders.find(o => o.id === id);
-    
+
     if (!order) {
         return res.status(404).json({ error: 'Заказ не найден' });
     }
-    
+
     const oldStatus = order.status;
     order.status = status;
     order.statusHistory.push({
@@ -800,9 +800,9 @@ app.put('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => 
         timestamp: new Date().toISOString(),
         comment: comment || `Статус изменён с ${oldStatus} на ${status}`
     });
-    
+
     writeDB(db);
-    
+
     // Уведомляем пользователя
     sendSSE(order.userId, 'order_updated', order);
 
@@ -816,23 +816,23 @@ app.put('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => 
 app.delete('/api/admin/orders/:id', authMiddleware, adminMiddleware, (req, res) => {
     const { id } = req.params;
     const db = readDB();
-    
+
     const index = db.orders.findIndex(o => o.id === id);
     if (index === -1) {
         return res.status(404).json({ error: 'Заказ не найден' });
     }
-    
+
     const order = db.orders[index];
-    
+
     // Перемещаем в историю
     db.ordersHistory.push({
         ...order,
         deletedAt: new Date().toISOString()
     });
-    
+
     db.orders.splice(index, 1);
     writeDB(db);
-    
+
     res.json({ success: true });
 });
 
