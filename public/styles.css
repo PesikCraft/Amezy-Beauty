@@ -51,7 +51,9 @@ button {
     font-family: inherit;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
     font-family: inherit;
 }
 
@@ -262,6 +264,84 @@ input, textarea, select {
 .user-name {
     font-weight: 500;
     color: var(--text-color);
+}
+
+/* ==================== LIQUID GLASS CATEGORIES ==================== */
+.liquid-categories {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 0 24px;
+}
+
+.liquid-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 18px;
+
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    overflow-x: auto;
+
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+
+    border-radius: 28px;
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.liquid-container::-webkit-scrollbar {
+    display: none;
+}
+
+.liquid-category {
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--text-color);
+
+    transition: all 0.25s ease;
+}
+
+.liquid-category:hover {
+    background: rgba(255, 255, 255, 0.65);
+    transform: translateY(-1px);
+}
+
+.liquid-category.active {
+    background: linear-gradient(
+        135deg,
+        var(--primary-color),
+        var(--primary-dark)
+    );
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(255, 133, 162, 0.45);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .liquid-categories {
+        top: 72px;
+    }
+
+    .liquid-container {
+        border-radius: 22px;
+        padding: 12px 14px;
+    }
+
+    .liquid-category {
+        padding: 12px 18px;
+        font-size: 13px;
+    }
 }
 
 /* ==================== MAIN ==================== */
@@ -663,7 +743,7 @@ input, textarea, select {
     border-color: var(--primary-light);
 }
 
-.payment-option input:checked + .payment-label {
+.payment-option input:checked+.payment-label {
     color: var(--primary-color);
 }
 
@@ -694,7 +774,7 @@ input, textarea, select {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     padding: 16px;
     border-radius: var(--radius-sm);
     margin-bottom: 12px;
@@ -712,7 +792,7 @@ input, textarea, select {
 }
 
 .card-number-box .btn {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
     color: var(--white);
     border: none;
 }
@@ -896,7 +976,8 @@ input, textarea, select {
     font-weight: 600;
 }
 
-.status-pending, .status-awaiting_payment {
+.status-pending,
+.status-awaiting_payment {
     background: #fff3cd;
     color: #856404;
 }
@@ -916,7 +997,8 @@ input, textarea, select {
     color: #155724;
 }
 
-.status-delivered, .status-done {
+.status-delivered,
+.status-done {
     background: #c3e6cb;
     color: #155724;
 }
@@ -1464,6 +1546,7 @@ input, textarea, select {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1528,6 +1611,7 @@ input, textarea, select {
         opacity: 0;
         transform: translateX(100%);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -1543,6 +1627,7 @@ input, textarea, select {
         opacity: 1;
         transform: translateX(0);
     }
+
     to {
         opacity: 0;
         transform: translateX(100%);
@@ -1575,7 +1660,7 @@ input, textarea, select {
     .header-content {
         flex-wrap: wrap;
     }
-    
+
     .nav {
         order: 3;
         width: 100%;
@@ -1583,70 +1668,70 @@ input, textarea, select {
         gap: 16px;
         padding-top: 16px;
     }
-    
+
     .header-right {
         gap: 8px;
     }
-    
+
     .header-actions .btn {
         padding: 8px 12px;
         font-size: 12px;
     }
-    
+
     .hero h1 {
         font-size: 32px;
     }
-    
+
     .hero p {
         font-size: 16px;
     }
-    
+
     .cart-content {
         grid-template-columns: 1fr;
     }
-    
+
     .cart-summary {
         position: static;
     }
-    
+
     .cart-item {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .cart-item-image {
         width: 100%;
         height: 150px;
     }
-    
+
     .footer-content {
         flex-direction: column;
         gap: 12px;
         text-align: center;
     }
-    
+
     .user-menu {
         flex-wrap: wrap;
         justify-content: center;
     }
-    
+
     .admin-tabs {
         justify-content: center;
     }
-    
+
     .stats-details {
         flex-direction: column;
     }
-    
+
     .admin-order-header {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .admin-product-card {
         flex-wrap: wrap;
     }
-    
+
     .modal-lg {
         max-width: 100%;
         margin: 10px;
@@ -1657,36 +1742,36 @@ input, textarea, select {
     .logo-text {
         font-size: 18px;
     }
-    
+
     .nav-link {
         font-size: 14px;
     }
-    
+
     .page-title {
         font-size: 24px;
     }
-    
+
     .section-title {
         font-size: 20px;
     }
-    
+
     .products-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .categories-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .checkout-actions {
         flex-direction: column;
     }
-    
+
     .card-number-box {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .card-number-box span {
         font-size: 16px;
     }
@@ -1694,12 +1779,15 @@ input, textarea, select {
 
 .logo-image {
     height: auto;
-    max-height: 52px;     /* чуть выше */
-    max-width: 360px;    /* СИЛЬНО шире для текста AMEZY BEAUTY */
+    max-height: 52px;
+    /* чуть выше */
+    max-width: 360px;
+    /* СИЛЬНО шире для текста AMEZY BEAUTY */
     width: 100%;
     object-fit: contain;
     display: block;
 }
+
 @media (max-width: 480px) {
     .logo-image {
         max-width: 260px;
@@ -1708,7 +1796,8 @@ input, textarea, select {
 }
 
 .hero-logo {
-    max-width: 520px;      /* ШИРОКО, как бренд */
+    max-width: 520px;
+    /* ШИРОКО, как бренд */
     width: 100%;
     margin: 24px auto 12px;
     display: block;
@@ -1724,8 +1813,9 @@ input, textarea, select {
 #orderDetailOverlay {
     position: fixed;
     inset: 0;
-    z-index: 9999; /* КРИТИЧНО */
-    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    /* КРИТИЧНО */
+    background: rgba(0, 0, 0, 0.6);
 }
 
 #orderDetailOverlay .order-detail {
@@ -1736,4 +1826,73 @@ input, textarea, select {
 
 }
 
+/* ==================== HEADER LIQUID GLASS CAPSULE ==================== */
+.header-glass-wrap {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  padding: 0 24px;
+}
 
+.header.glass {
+  max-width: 1400px;
+  margin: 0 auto;
+
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+
+  border-radius: 28px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+/* расстояние между капсулами */
+.liquid-categories {
+  margin-top: 24px;
+}
+
+/* ==================== LIQUID CAPSULE ANIMATION ==================== */
+@keyframes glassFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.header.glass,
+.liquid-container {
+  animation: glassFadeUp 0.45s ease-out both;
+}
+
+/* ==================== MOBILE POLISH ==================== */
+@media (max-width: 768px) {
+  .header-glass-wrap {
+    top: 8px;
+    padding: 0 12px;
+  }
+
+  .header.glass {
+    border-radius: 22px;
+  }
+
+  .liquid-categories {
+    margin-top: 16px;
+    padding: 0 12px;
+  }
+
+  .liquid-container {
+    gap: 10px;
+    padding: 12px;
+  }
+}
+
+/* приятный горизонтальный скролл */
+.liquid-container {
+  scroll-behavior: smooth;
+}

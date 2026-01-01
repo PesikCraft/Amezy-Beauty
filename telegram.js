@@ -40,18 +40,17 @@ async function sendOrderToTelegram(order) {
     if (order.telegramNotified) return;
 
     const text =
-`🛒 Новый заказ — Amezy Beauty
+        `🛒 Новый заказ — Amezy Beauty
 
 👤 Клиент: ${order.userEmail || '—'}
 💳 Оплата: ${order.paymentMethod}
 📦 Статус: ${order.status}
 
 📍 Адрес: ${order.address || '—'}
-🗺 Карта: ${
-order.mapCoordinates
-? `https://yandex.ru/maps/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16`
-: '—'
-}
+🗺 Карта: ${order.mapCoordinates
+            ? `https://yandex.ru/maps/?ll=${order.mapCoordinates.split(',')[1]},${order.mapCoordinates.split(',')[0]}&z=16`
+            : '—'
+        }
 
 🧴 Товары:
 ${formatItems(order.items)}
@@ -85,7 +84,7 @@ async function sendOrderStatusUpdate(order) {
     };
 
     const text =
-`📦 Статус заказа обновлён — Amezy Beauty
+        `📦 Статус заказа обновлён — Amezy Beauty
 
 👤 Клиент: ${order.userEmail || '—'}
 🧾 Заказ: ${order.id}
